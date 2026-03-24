@@ -1,121 +1,109 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+ import { useState } from "react";
+import "./App.css";
+import { Bar } from "react-chartjs-2";
+import "chart.js/auto";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [risk, setRisk] = useState(40);
+  const [transaction, setTransaction] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+
+  // 📊 Status Logic
+  const getStatus = () => {
+    if (risk < 50) return { text: "SAFE ✅", color: "green" };
+    if (risk < 75) return { text: "WARNING ⚠️", color: "orange" };
+    return { text: "BLOCK 🚫", color: "red" };
+  };
+
+  const status = getStatus();
+
+  // 💳 Transaction Check
+  const checkTransaction = () => {
+    if (transaction.toLowerCase().includes("otp")) {
+      setRisk(85);
+      setAlertMsg("🚨 Scam Detected!");
+    } else {
+      setRisk(30);
+      setAlertMsg("✅ Safe Transaction");
+    }
+  };
+
+  // 🎤 Voice Input
+  const startVoice = () => {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.start();
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      setTransaction(text);
+
+      if (text.toLowerCase().includes("otp")) {
+        setRisk(85);
+        setAlertMsg("🚨 Scam Detected via Voice!");
+      } else {
+        setRisk(30);
+        setAlertMsg("✅ Safe Voice Input");
+      }
+    };
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="container">
+      <h1>TrustAI Dashboard</h1>
 
-      <div className="ticks"></div>
+      {/* Alert */}
+      {alertMsg && <div className="alert">{alertMsg}</div>}
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {/* Risk Slider */}
+      <div className="card">
+        <h2>Risk: {risk}%</h2>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={risk}
+          onChange={(e) => setRisk(e.target.value)}
+        />
+        <p style={{ color: status.color }}>{status.text}</p>
+      </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Chart */}
+      <div className="card">
+        <h2>AI Risk Analysis</h2>
+        <Bar
+          data={{
+            labels: ["Text", "Voice", "Behavior", "Threat"],
+            datasets: [
+              {
+                label: "Risk Scores",
+                data: [risk - 10, risk - 5, risk, risk + 5],
+              },
+            ],
+          }}
+        />
+      </div>
+
+      {/* Transaction Checker */}
+      <div className="card">
+        <h2>Transaction Checker</h2>
+        <input
+          type="text"
+          placeholder="Enter message..."
+          value={transaction}
+          onChange={(e) => setTransaction(e.target.value)}
+        />
+        <br /><br />
+        <button onClick={checkTransaction}>Check</button>
+        <button onClick={startVoice}>🎤 Speak</button>
+      </div>
+
+      {/* Actions */}
+      <div className="card">
+        <h2>Actions</h2>
+        <button className="approve">Approve</button>
+        <button className="block">Block</button>
+        <button className="report">Report</button>
+      </div>
+    </div>
+  );
 }
-
-export default App
